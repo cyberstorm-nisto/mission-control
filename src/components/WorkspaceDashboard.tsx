@@ -177,11 +177,14 @@ function WorkspaceCard({ workspace, onDelete }: { workspace: WorkspaceStats; onD
           </div>
         </div>
 
-        {/* Simple task/agent counts */}
+        {/* Simple task/agent counts - show active (non-done) tasks */}
         <div className="flex items-center gap-4 text-sm text-mc-text-secondary mt-4">
           <div className="flex items-center gap-1">
             <CheckSquare className="w-4 h-4" />
-            <span>{workspace.taskCounts.total} tasks</span>
+            <span>{workspace.taskCounts.total - workspace.taskCounts.done} active</span>
+            {workspace.taskCounts.done > 0 && (
+              <span className="text-mc-text-secondary/50">({workspace.taskCounts.done} done)</span>
+            )}
           </div>
           <div className="flex items-center gap-1">
             <Users className="w-4 h-4" />
