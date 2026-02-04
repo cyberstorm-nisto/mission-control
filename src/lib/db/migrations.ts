@@ -267,6 +267,24 @@ const migrations: Migration[] = [
       `);
       console.log('[Migration 009] Added commit and pr review types');
     }
+  },
+  {
+    id: '010',
+    name: 'add_task_hierarchy',
+    up: (db) => {
+      console.log('[Migration 010] Adding task hierarchy (parent_task_id)...');
+      
+      const columns = db.prepare("PRAGMA table_info(tasks)").all() as { name: string }[];
+      if (!columns.some(c => c.name === 'parent_task_id')) {
+        db.exec("ALTER TABLE tasks ADD COLUMN parent_task_id TEXT REFERENCES tasks(id)");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_task_id)");
+        console.log('[Migration 010] Added parent_task_id column');
+      }
+      
+      // Parent tasks can only progress when all children are done
+      // This is enforced in application logic, not DB constraints
+      console.log('[Migration 010] Task hierarchy support added');
+    }
   }
 ];
 

@@ -47,11 +47,14 @@ export interface Task {
   workspace_id: string;
   business_id: string;
   due_date?: string;
+  parent_task_id?: string;  // For sub-tasks
   created_at: string;
   updated_at: string;
   // Joined fields
   assigned_agent?: Agent;
   created_by_agent?: Agent;
+  subtask_count?: number;
+  subtasks_done?: number;
 }
 
 export interface Conversation {
@@ -260,6 +263,7 @@ export interface CreateTaskRequest {
   created_by_agent_id?: string;
   business_id?: string;
   due_date?: string;
+  parent_task_id?: string;  // For creating sub-tasks
 }
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {

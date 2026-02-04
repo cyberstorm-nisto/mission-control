@@ -124,6 +124,42 @@ export async function PATCH(
          VALUES (?, ?, ?, ?, ?)`,
         [uuidv4(), eventType, id, `Task "${existing.title}" moved to ${body.status}`, now]
       );
+
+      // If this is a subtask completing, check if parent should auto-progress
+      if (body.status === 'done' && existing.parent_task_id) {
+        const siblings = queryAll<{ status: string }>(
+          'SELECT status FROM tasks WHERE parent_task_id = ?',
+          [existing.parent_task_id]
+        );
+        
+        const allDone = siblings.every(s => s.status === 'done');
+        
+        if (allDone) {
+          // Auto-progress parent to testing
+          const parent = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [existing.parent_task_id]);
+          if (parent && parent.status === 'in_progress') {
+            run(
+              `UPDATE tasks SET status = 'testing', updated_at = ? WHERE id = ?`,
+              [now, existing.parent_task_id]
+            );
+            
+            run(
+              `INSERT INTO events (id, type, task_id, message, created_at)
+               VALUES (?, ?, ?, ?, ?)`,
+              [uuidv4(), 'task_status_changed', existing.parent_task_id, 
+               `All subtasks done - "${parent.title}" moved to testing`, now]
+            );
+            
+            // Broadcast parent update
+            const updatedParent = queryOne<Task>('SELECT * FROM tasks WHERE id = ?', [existing.parent_task_id]);
+            if (updatedParent) {
+              broadcast({ type: 'task_updated', payload: updatedParent });
+            }
+            
+            console.log(`[Task ${existing.parent_task_id}] All subtasks done - auto-moved to testing`);
+          }
+        }
+      }
     }
 
     // Handle assignment change
