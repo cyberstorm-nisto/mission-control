@@ -10,8 +10,11 @@ export async function GET(request: NextRequest) {
     
     let agents: Agent[];
     if (workspaceId) {
+      // Include agents for this workspace AND global agents (workspace_id = 'default')
       agents = queryAll<Agent>(`
-        SELECT * FROM agents WHERE workspace_id = ? ORDER BY is_master DESC, name ASC
+        SELECT * FROM agents 
+        WHERE workspace_id = ? OR workspace_id = 'default' 
+        ORDER BY is_master DESC, name ASC
       `, [workspaceId]);
     } else {
       agents = queryAll<Agent>(`
