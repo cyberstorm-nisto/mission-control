@@ -165,6 +165,24 @@ const migrations: Migration[] = [
     }
   },
   {
+    id: '007',
+    name: 'add_workspace_hierarchy',
+    up: (db) => {
+      console.log('[Migration 007] Adding workspace hierarchy (parent_id)...');
+      
+      // Add parent_id column to workspaces
+      const columns = db.prepare("PRAGMA table_info(workspaces)").all() as { name: string }[];
+      if (!columns.some(c => c.name === 'parent_id')) {
+        db.exec("ALTER TABLE workspaces ADD COLUMN parent_id TEXT REFERENCES workspaces(id)");
+        console.log('[Migration 007] Added parent_id column');
+      }
+      
+      // Note: Parent workspaces (orgs) are created manually via API
+      // Existing workspaces remain as top-level until assigned a parent
+      console.log('[Migration 007] Hierarchy support added - create org workspaces via UI');
+    }
+  },
+  {
     id: '006',
     name: 'add_tasks_archive_table',
     up: (db) => {

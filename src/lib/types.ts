@@ -104,6 +104,7 @@ export interface Workspace {
   slug: string;
   description?: string;
   icon: string;
+  parent_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,6 +114,7 @@ export interface WorkspaceStats {
   name: string;
   slug: string;
   icon: string;
+  parent_id?: string | null;
   taskCounts: {
     planning: number;
     inbox: number;
