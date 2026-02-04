@@ -215,6 +215,29 @@ const migrations: Migration[] = [
       `);
       console.log('[Migration 006] Created tasks_archive table');
     }
+  },
+  {
+    id: '008',
+    name: 'add_task_reviews',
+    up: (db) => {
+      console.log('[Migration 008] Creating task_reviews table for parallel reviews...');
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS task_reviews (
+          id TEXT PRIMARY KEY,
+          task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          review_type TEXT NOT NULL CHECK (review_type IN ('uat', 'security', 'quality', 'gap')),
+          status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'passed', 'failed')),
+          reviewer_agent_id TEXT REFERENCES agents(id),
+          notes TEXT,
+          reviewed_at TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          UNIQUE(task_id, review_type)
+        );
+        CREATE INDEX IF NOT EXISTS idx_task_reviews_task ON task_reviews(task_id);
+        CREATE INDEX IF NOT EXISTS idx_task_reviews_status ON task_reviews(task_id, status);
+      `);
+      console.log('[Migration 008] Created task_reviews table');
+    }
   }
 ];
 

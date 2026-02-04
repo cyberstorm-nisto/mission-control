@@ -167,6 +167,24 @@ export interface TaskDeliverable {
   created_at: string;
 }
 
+// Review types (parallel review checkboxes)
+export type ReviewType = 'uat' | 'security' | 'quality' | 'gap';
+export type ReviewStatus = 'pending' | 'passed' | 'failed';
+
+export interface TaskReview {
+  id: string;
+  task_id: string;
+  review_type: ReviewType;
+  status: ReviewStatus;
+  reviewer_agent_id?: string;
+  notes?: string;
+  reviewed_at?: string;
+  created_at: string;
+  // Joined fields
+  reviewer_agent_name?: string;
+  reviewer_agent_emoji?: string;
+}
+
 // Planning types
 export type PlanningQuestionType = 'multiple_choice' | 'text' | 'yes_no';
 
