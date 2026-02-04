@@ -163,6 +163,40 @@ const migrations: Migration[] = [
         console.log('[Migration 005] Added github_repo column');
       }
     }
+  },
+  {
+    id: '006',
+    name: 'add_tasks_archive_table',
+    up: (db) => {
+      console.log('[Migration 006] Creating tasks_archive table...');
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS tasks_archive (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          status TEXT DEFAULT 'done',
+          priority TEXT,
+          assigned_agent_id TEXT,
+          created_by_agent_id TEXT,
+          workspace_id TEXT,
+          business_id TEXT,
+          due_date TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          archived_at TEXT DEFAULT (datetime('now')),
+          planning_session_key TEXT,
+          planning_messages TEXT,
+          planning_complete INTEGER,
+          planning_spec TEXT,
+          planning_agents TEXT,
+          deliverables_json TEXT,
+          activities_json TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_tasks_archive_workspace ON tasks_archive(workspace_id);
+        CREATE INDEX IF NOT EXISTS idx_tasks_archive_archived ON tasks_archive(archived_at);
+      `);
+      console.log('[Migration 006] Created tasks_archive table');
+    }
   }
 ];
 
