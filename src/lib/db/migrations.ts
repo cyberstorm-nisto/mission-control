@@ -238,6 +238,35 @@ const migrations: Migration[] = [
       `);
       console.log('[Migration 008] Created task_reviews table');
     }
+  },
+  {
+    id: '009',
+    name: 'add_commit_pr_review_types',
+    up: (db) => {
+      console.log('[Migration 009] Adding commit and pr review types...');
+      // SQLite doesn't support ALTER CHECK constraint, so we recreate the table
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS task_reviews_new (
+          id TEXT PRIMARY KEY,
+          task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          review_type TEXT NOT NULL CHECK (review_type IN ('uat', 'security', 'quality', 'gap', 'commit', 'pr')),
+          status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'passed', 'failed', 'skipped')),
+          reviewer_agent_id TEXT REFERENCES agents(id),
+          notes TEXT,
+          reviewed_at TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          UNIQUE(task_id, review_type)
+        );
+        
+        INSERT OR IGNORE INTO task_reviews_new SELECT * FROM task_reviews;
+        DROP TABLE IF EXISTS task_reviews;
+        ALTER TABLE task_reviews_new RENAME TO task_reviews;
+        
+        CREATE INDEX IF NOT EXISTS idx_task_reviews_task ON task_reviews(task_id);
+        CREATE INDEX IF NOT EXISTS idx_task_reviews_status ON task_reviews(task_id, status);
+      `);
+      console.log('[Migration 009] Added commit and pr review types');
+    }
   }
 ];
 

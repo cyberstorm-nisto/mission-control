@@ -168,8 +168,8 @@ export interface TaskDeliverable {
 }
 
 // Review types (parallel review checkboxes)
-export type ReviewType = 'uat' | 'security' | 'quality' | 'gap';
-export type ReviewStatus = 'pending' | 'passed' | 'failed';
+export type ReviewType = 'uat' | 'security' | 'quality' | 'gap' | 'commit' | 'pr';
+export type ReviewStatus = 'pending' | 'passed' | 'failed' | 'skipped';
 
 export interface TaskReview {
   id: string;

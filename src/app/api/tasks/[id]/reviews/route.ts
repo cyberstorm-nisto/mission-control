@@ -4,7 +4,7 @@ import { queryAll, queryOne, run } from '@/lib/db';
 import { broadcast } from '@/lib/events';
 import type { TaskReview, ReviewType, ReviewStatus, Task } from '@/lib/types';
 
-const REVIEW_TYPES: ReviewType[] = ['uat', 'security', 'quality', 'gap'];
+const REVIEW_TYPES: ReviewType[] = ['uat', 'security', 'quality', 'gap', 'commit', 'pr'];
 
 // GET /api/tasks/[id]/reviews - List all reviews for a task
 export async function GET(
@@ -106,7 +106,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid review_type' }, { status: 400 });
     }
 
-    if (!status || !['pending', 'passed', 'failed'].includes(status)) {
+    if (!status || !['pending', 'passed', 'failed', 'skipped'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
@@ -141,7 +141,7 @@ export async function PATCH(
 
     const allPassed = REVIEW_TYPES.every(type => {
       const review = allReviews.find(r => r.review_type === type);
-      return review?.status === 'passed';
+      return review?.status === 'passed' || review?.status === 'skipped';
     });
 
     if (allPassed) {
