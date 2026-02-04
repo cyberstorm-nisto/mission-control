@@ -151,6 +151,18 @@ const migrations: Migration[] = [
         console.log('[Migration 004] Added planning_agents');
       }
     }
+  },
+  {
+    id: '005',
+    name: 'add_github_repo_to_workspaces',
+    up: (db) => {
+      console.log('[Migration 005] Adding github_repo to workspaces...');
+      const columns = db.prepare("PRAGMA table_info(workspaces)").all() as { name: string }[];
+      if (!columns.some(c => c.name === 'github_repo')) {
+        db.exec("ALTER TABLE workspaces ADD COLUMN github_repo TEXT");
+        console.log('[Migration 005] Added github_repo column');
+      }
+    }
   }
 ];
 
