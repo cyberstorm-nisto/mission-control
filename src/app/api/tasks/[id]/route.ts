@@ -98,6 +98,25 @@ export async function PATCH(
         shouldDispatch = true;
       }
 
+      // Auto-complete sessions when task moves to done or review
+      if (body.status === 'done' || body.status === 'review') {
+        const activeSessions = queryAll<{ id: string; openclaw_session_id: string }>(
+          `SELECT id, openclaw_session_id FROM openclaw_sessions 
+           WHERE task_id = ? AND status = 'active'`,
+          [id]
+        );
+        
+        if (activeSessions.length > 0) {
+          run(
+            `UPDATE openclaw_sessions 
+             SET status = 'completed', ended_at = ?, updated_at = ?
+             WHERE task_id = ? AND status = 'active'`,
+            [now, now, id]
+          );
+          console.log(`[Task ${id}] Auto-completed ${activeSessions.length} session(s) on status change to ${body.status}`);
+        }
+      }
+
       // Log status change event
       const eventType = body.status === 'done' ? 'task_completed' : 'task_status_changed';
       run(
