@@ -5,6 +5,8 @@
  * the Mission Control server.
  */
 
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync, statSync } from 'fs';
 import path from 'path';

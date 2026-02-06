@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { TaskActivity } from '@/lib/types';
 
 interface ActivityLogProps {
@@ -16,11 +16,7 @@ export function ActivityLog({ taskId }: ActivityLogProps) {
   const [activities, setActivities] = useState<TaskActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-  }, [taskId]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
     try {
       const res = await fetch(`/api/tasks/${taskId}/activities`);
       if (res.ok) {
@@ -32,7 +28,11 @@ export function ActivityLog({ taskId }: ActivityLogProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

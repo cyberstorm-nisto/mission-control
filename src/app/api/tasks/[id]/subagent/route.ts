@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { broadcast } from '@/lib/events';
 import { getOpenClawClient } from '@/lib/openclaw/client';
+import type { Task, TaskActivity, OpenClawSessionInfo } from '@/lib/types';
 
 /**
  * POST /api/tasks/[id]/subagent
@@ -155,7 +156,19 @@ export async function GET(
       if (!client.isConnected()) {
         await client.connect();
       }
-      const allSessions = await client.listSessions() as OpenClawLiveSession[];
+      const sessions = (await client.listSessions()) as OpenClawSessionInfo[];
+      const allSessions: OpenClawLiveSession[] = sessions.map((s) => ({
+        key: s.id,
+        sessionId: s.id,
+        label: s.peer,
+        displayName: s.peer,
+        channel: s.channel,
+        model: s.model,
+        status: s.status,
+        abortedLastRun: false,
+        updatedAt: Date.now(),
+        totalTokens: 0,
+      }));
       // Filter to only subagent sessions
       liveSessions = allSessions.filter((s: OpenClawLiveSession) => 
         s.key?.includes(':subagent:')
@@ -190,14 +203,6 @@ export async function GET(
           agent_name: agentName,
           agent_avatar_emoji: '🤖',
           // Extra fields for live sessions
-          // @ts-expect-error - adding extra fields for live sessions
-          _live: true,
-          // @ts-expect-error - adding extra fields for live sessions
-          _label: live.label,
-          // @ts-expect-error - adding extra fields for live sessions
-          _totalTokens: live.totalTokens,
-          // @ts-expect-error - adding extra fields for live sessions
-          _model: live.model,
         });
       }
     }

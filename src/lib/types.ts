@@ -158,7 +158,7 @@ export interface TaskActivity {
   agent?: Agent;
 }
 
-export type DeliverableType = 'file' | 'url' | 'artifact';
+export type DeliverableType = 'file' | 'url' | 'artifact' | 'commit';
 
 export interface TaskDeliverable {
   id: string;
@@ -315,7 +315,8 @@ export type SSEEventType =
   | 'activity_logged'
   | 'deliverable_added'
   | 'agent_spawned'
-  | 'agent_completed';
+  | 'agent_completed'
+  | 'review_updated';
 
 export interface SSEEvent {
   type: SSEEventType;
@@ -327,5 +328,8 @@ export interface SSEEvent {
     deleted?: boolean;
   } | {
     id: string;  // For task_deleted events
+  } | {
+    task_id: string;
+    review: TaskReview;
   };
 }

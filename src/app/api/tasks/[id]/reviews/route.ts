@@ -190,6 +190,10 @@ export async function PATCH(
       [id, review_type]
     );
 
+    if (!review) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 });
+    }
+
     // Broadcast review update
     broadcast({ type: 'review_updated', payload: { task_id: id, review } });
 

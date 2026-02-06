@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle2, XCircle, Clock, MinusCircle, RefreshCw } from 'lucide-react';
 import type { TaskReview, ReviewType, ReviewStatus } from '@/lib/types';
 
@@ -31,7 +31,7 @@ export function TaskReviewsTab({ taskId }: TaskReviewsTabProps) {
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
 
-  async function fetchReviews() {
+  const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch(`/api/tasks/${taskId}/reviews`);
       if (res.ok) {
@@ -42,9 +42,9 @@ export function TaskReviewsTab({ taskId }: TaskReviewsTabProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [taskId]);
 
-  async function initializeReviews() {
+  const initializeReviews = useCallback(async () => {
     setInitializing(true);
     try {
       const res = await fetch(`/api/tasks/${taskId}/reviews`, { method: 'POST' });
@@ -56,11 +56,11 @@ export function TaskReviewsTab({ taskId }: TaskReviewsTabProps) {
     } finally {
       setInitializing(false);
     }
-  }
+  }, [taskId]);
 
   useEffect(() => {
     fetchReviews();
-  }, [taskId]);
+  }, [fetchReviews]);
 
   if (loading) {
     return (
