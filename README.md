@@ -81,29 +81,16 @@ OpenClaw needs access to an AI provider. Supported providers:
 
 ## 🚀 Installation
 
-### Step 1: Clone the Repository
+### Option A: Local (Node.js)
 
+1) Clone and install
 ```bash
-git clone https://github.com/crshdn/mission-control.git
+git clone https://github.com/cyberstorm-nisto/mission-control.git
 cd mission-control
-```
-
-### Step 2: Install Dependencies
-
-```bash
 npm install
 ```
 
-### Step 3: Create Environment File
-
-Create a file called `.env.local` in the project root:
-
-```bash
-touch .env.local
-```
-
-Open it in a text editor and add:
-
+2) Create `.env.local`
 ```env
 # OpenClaw Gateway Connection
 OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789
@@ -113,46 +100,80 @@ OPENCLAW_GATEWAY_TOKEN=your-openclaw-token-here
 PORT=3000
 ```
 
-**How to get these values:**
-
-| Variable | Where to find it |
-|----------|------------------|
-| `OPENCLAW_GATEWAY_URL` | The WebSocket URL where OpenClaw is running. Default is `ws://127.0.0.1:18789` for local. For remote, use `wss://your-server.example.com` |
-| `OPENCLAW_GATEWAY_TOKEN` | Found in your OpenClaw config file at `~/.openclaw/openclaw.json` under `gateway.token` |
-
-### Step 4: Start OpenClaw (if not already running)
-
-In a **separate terminal**:
-
+3) Start OpenClaw (separate terminal)
 ```bash
-# First time setup - this will guide you through configuration
-openclaw init
-
-# Start the gateway
+openclaw init   # first-time
 openclaw gateway start
 ```
 
-OpenClaw will ask you to configure your AI provider (like Anthropic). Follow the prompts.
-
-### Step 5: Start Mission Control
-
-Back in the Mission Control directory:
-
+4) Run Mission Control
 ```bash
 npm run dev
+# or production: npm run build && npm run start
 ```
 
-You should see:
+5) Open http://localhost:3000
+
+### Option B: Docker
+
+Build the image:
+```bash
+docker build -t cyberstorm-nisto/mission-control:dev .
 ```
-▲ Next.js 15.x.x
-- Local: http://localhost:3000
+
+Run it (bind port 3000, point to your gateway, persist DB):
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -e OPENCLAW_GATEWAY_URL=ws://host.docker.internal:18789 \
+  -e OPENCLAW_GATEWAY_TOKEN=your-openclaw-token-here \
+  -e PORT=3000 \
+  -v $(pwd)/data/mission-control.db:/app/mission-control.db \
+  cyberstorm-nisto/mission-control:dev
 ```
 
-### Step 6: Open in Browser
+Compose example (with an existing `openclaw-gateway` service):
+```yaml
+services:
+  openclaw-gateway:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    env_file:
+      - /opt/services/config/openclaw/env
+      - /opt/services/config/openclaw/telegram.env
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: "deadbeef"
+    volumes:
+      - /opt/services/config/openclaw-home:/home/node
+    ports:
+      - "127.0.0.1:18789:18789"
+      - "127.0.0.1:18792:18792"
+    init: true
+    command: ["node","dist/index.js","gateway","--bind","lan","--port","18789","--allow-unconfigured","--token","deadbeef"]
 
-Go to: **http://localhost:3000**
+  mission-control:
+    build: .
+    container_name: mission-control
+    restart: unless-stopped
+    depends_on:
+      - openclaw-gateway
+    environment:
+      OPENCLAW_GATEWAY_URL: ws://openclaw-gateway:18789
+      OPENCLAW_GATEWAY_TOKEN: deadbeef
+      PORT: 3000
+    volumes:
+      - ./data/mission-control.db:/app/mission-control.db
+    ports:
+      - "3000:3000"
+```
 
-🎉 You should see the Mission Control dashboard!
+Notes:
+- `OPENCLAW_GATEWAY_URL` should point at your gateway service/host.
+- The SQLite file lives at `/app/mission-control.db`; mount a volume for persistence.
+- Defaults to port 3000 inside the container; override `PORT` if you need a different bind.
 
 ---
 
